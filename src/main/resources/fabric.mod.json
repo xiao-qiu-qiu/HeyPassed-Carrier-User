@@ -17,6 +17,9 @@
 	"entrypoints": {
 		"main": [
 			"com.bidiu.hpcarrier.HeypassedCarrier"
+		],
+		"client": [
+			"com.bidiu.hpcarrier.HeypassedCarrierClient"
 		]
 	},
 	"mixins": [

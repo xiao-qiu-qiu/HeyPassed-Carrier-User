@@ -1,0 +1,90 @@
+package com.bidiu.hpcarrier;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
+import net.fabricmc.loader.api.FabricLoader;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+public final class HeypassedCarrierConfig {
+	public static final List<String> GAME_MODES = List.of(
+		"sw1",
+		"sw2",
+		"swwzy",
+		"xyzz1",
+		"xyzz2",
+		"bw8-1",
+		"bw8-2",
+		"bw4-4",
+		"bwxp4-8",
+		"bwxp8-4",
+		"bwxp32-32",
+		"bwwuhuo"
+	);
+
+	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("heypassed-carrier.json");
+
+	public boolean autoJoinParty = true;
+	public String selectedMode = GAME_MODES.getFirst();
+	public String messageTemplate = ".irc chat $tell Bi_Diu [id] [玩法]";
+
+	public static HeypassedCarrierConfig load() {
+		if (!Files.exists(CONFIG_PATH)) {
+			HeypassedCarrierConfig config = new HeypassedCarrierConfig();
+			config.save();
+			return config;
+		}
+
+		try (Reader reader = Files.newBufferedReader(CONFIG_PATH)) {
+			HeypassedCarrierConfig config = GSON.fromJson(reader, HeypassedCarrierConfig.class);
+			if (config == null) {
+				config = new HeypassedCarrierConfig();
+			}
+			config.normalize();
+			return config;
+		} catch (IOException | JsonSyntaxException exception) {
+			HeypassedCarrier.LOGGER.warn("Failed to load config, using defaults", exception);
+			HeypassedCarrierConfig config = new HeypassedCarrierConfig();
+			config.save();
+			return config;
+		}
+	}
+
+	public void save() {
+		try {
+			Files.createDirectories(CONFIG_PATH.getParent());
+			try (Writer writer = Files.newBufferedWriter(CONFIG_PATH)) {
+				GSON.toJson(this, writer);
+			}
+		} catch (IOException exception) {
+			HeypassedCarrier.LOGGER.error("Failed to save config", exception);
+		}
+	}
+
+	public String buildInviteMessage(String playerId) {
+		return messageTemplate
+			.replace("[id]", playerId)
+			.replace("[玩法]", selectedMode);
+	}
+
+	public void setSelectedMode(String selectedMode) {
+		this.selectedMode = selectedMode;
+		normalize();
+	}
+
+	public void normalize() {
+		if (!GAME_MODES.contains(selectedMode)) {
+			selectedMode = GAME_MODES.getFirst();
+		}
+		if (messageTemplate == null || messageTemplate.isBlank()) {
+			messageTemplate = ".irc chat $tell Bi_Diu [id] [玩法]";
+		}
+	}
+}
