@@ -33,7 +33,7 @@ public final class HeypassedCarrierConfig {
 
 	public boolean autoJoinParty = true;
 	public String selectedMode = GAME_MODES.getFirst();
-	public String messageTemplate = ".irc chat $tell Bi_Diu [id] [玩法]";
+	public String messageTemplate = ".irc chat $tell Bi_Diu .i [id] [mode]";
 
 	public static HeypassedCarrierConfig load() {
 		if (!Files.exists(CONFIG_PATH)) {
@@ -71,7 +71,7 @@ public final class HeypassedCarrierConfig {
 	public String buildInviteMessage(String playerId) {
 		return messageTemplate
 			.replace("[id]", playerId)
-			.replace("[玩法]", selectedMode);
+			.replace("[mode]", selectedMode);
 	}
 
 	public void setSelectedMode(String selectedMode) {
@@ -84,7 +84,7 @@ public final class HeypassedCarrierConfig {
 			selectedMode = GAME_MODES.getFirst();
 		}
 		if (messageTemplate == null || messageTemplate.isBlank()) {
-			messageTemplate = ".irc chat $tell Bi_Diu [id] [玩法]";
+			messageTemplate = ".irc chat $tell Bi_Diu .i [id] [mode]";
 		}
 	}
 }

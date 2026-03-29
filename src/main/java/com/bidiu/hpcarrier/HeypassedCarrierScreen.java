@@ -24,8 +24,8 @@ public class HeypassedCarrierScreen extends Screen {
 
         this.templateField = new TextFieldWidget(this.textRenderer, centerX - 110, top + 70, 220, 20,
                 Text.literal("消息格式"));
+        this.templateField.setMaxLength(512);
         this.templateField.setText(config.messageTemplate);
-        this.templateField.setMaxLength(256);
         this.addSelectableChild(this.templateField);
 
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(config.autoJoinParty)
@@ -48,7 +48,7 @@ public class HeypassedCarrierScreen extends Screen {
         this.addDrawableChild(ButtonWidget.builder(Text.literal("恢复默认"), button -> {
             config.autoJoinParty = true;
             config.setSelectedMode(HeypassedCarrierConfig.GAME_MODES.getFirst());
-            config.messageTemplate = ".irc chat $tell Bi_Diu [id] [玩法]";
+            config.messageTemplate = ".irc chat $tell Bi_Diu .i [id] [mode]";
             config.normalize();
             HeypassedCarrierClient.saveConfig();
             this.client.setScreen(new HeypassedCarrierScreen(this.parent));
@@ -87,7 +87,8 @@ public class HeypassedCarrierScreen extends Screen {
         int centerX = this.width / 2;
         int top = this.height / 4;
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, centerX, top - 30, 0xFFFFFF);
-        context.drawTextWithShadow(this.textRenderer, Text.literal("消息格式，支持 [id] 和 [玩法] 占位符"), centerX - 110, top + 58,
+        context.drawTextWithShadow(this.textRenderer, Text.literal("消息格式，支持 [id] 和 [mode] 占位符"), centerX - 110,
+                top + 58,
                 0xA0A0A0);
         this.templateField.render(context, mouseX, mouseY, delta);
     }
