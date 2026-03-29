@@ -11,6 +11,7 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 public final class HeypassedCarrierConfig {
 	public static final List<String> GAME_MODES = List.of(
@@ -25,7 +26,24 @@ public final class HeypassedCarrierConfig {
 		"bwxp4-8",
 		"bwxp8-4",
 		"bwxp32-32",
-		"bwwuhuo"
+		"bwwuhuo",
+		"zyzz"
+	);
+
+	public static final Map<String, String> GAME_MODE_NAMES = Map.ofEntries(
+		Map.entry("sw1", "空岛单人"),
+		Map.entry("sw2", "空岛双人"),
+		Map.entry("swwzy", "空岛单人 无职业"),
+		Map.entry("xyzz1", "幸运之柱 单人"),
+		Map.entry("xyzz2", "幸运之柱 双人"),
+		Map.entry("bw8-1", "起床8队单人"),
+		Map.entry("bw8-2", "起床8队双人"),
+		Map.entry("bw4-4", "起床4队4人"),
+		Map.entry("bwxp4-8", "经验起床 4队8人"),
+		Map.entry("bwxp8-4", "经验起床 8队4人"),
+		Map.entry("bwxp32-32", "经验起床 64人（32v32）"),
+		Map.entry("bwwuhuo", "起床 无限火力"),
+		Map.entry("zyzz", "职业战争")
 	);
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -71,7 +89,7 @@ public final class HeypassedCarrierConfig {
 	public String buildInviteMessage(String playerId) {
 		return messageTemplate
 			.replace("[id]", playerId)
-			.replace("[mode]", selectedMode);
+			.replace("[mode]", getNormalizedSelectedMode());
 	}
 
 	public void setSelectedMode(String selectedMode) {
@@ -80,11 +98,23 @@ public final class HeypassedCarrierConfig {
 	}
 
 	public void normalize() {
+		if (selectedMode != null) {
+			selectedMode = selectedMode.trim();
+		}
 		if (!GAME_MODES.contains(selectedMode)) {
 			selectedMode = GAME_MODES.getFirst();
 		}
 		if (messageTemplate == null || messageTemplate.isBlank()) {
 			messageTemplate = ".irc chat $tell Bi_Diu .i [id] [mode]";
 		}
+	}
+
+	private String getNormalizedSelectedMode() {
+		normalize();
+		return selectedMode;
+	}
+
+	public static String getModeDisplayName(String modeId) {
+		return GAME_MODE_NAMES.getOrDefault(modeId, modeId);
 	}
 }
