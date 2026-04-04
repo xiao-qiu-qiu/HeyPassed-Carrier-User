@@ -134,6 +134,10 @@ public class HeypassedCarrierScreen extends Screen {
         context.drawTextWithShadow(this.textRenderer, Text.literal("消息格式，支持 [id] 和 [mode] 占位符"), centerX - 110,
                 top + 58,
                 0xA0A0A0);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Love from Bi_Diu"), centerX,
+            this.height - 26, 0xB8B8B8);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("dev: ChatGPT"), centerX,
+            this.height - 15, 0x8F8F8F);
         this.templateField.render(context, mouseX, mouseY, delta);
         this.renderModeDropdown(context, mouseX, mouseY);
     }
