@@ -51,6 +51,7 @@ public final class HeypassedCarrierConfig {
 
 	public boolean autoJoinParty = true;
 	public boolean autoJoinPartyRecentInviteWindow = true;
+	public boolean inGameSendConfirm = true;
 	public String selectedMode = GAME_MODES.getFirst();
 	public String messageTemplate = ".irc chat $tell Bi_Diu .i [id] [mode]";
 

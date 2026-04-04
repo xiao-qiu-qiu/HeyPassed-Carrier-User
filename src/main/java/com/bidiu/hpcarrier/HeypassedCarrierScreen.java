@@ -6,11 +6,16 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.text.Text;
+import net.minecraft.client.gui.tooltip.Tooltip;
 
 public class HeypassedCarrierScreen extends Screen {
     private static final int MODE_DROPDOWN_WIDTH = 220;
     private static final int MODE_DROPDOWN_HEIGHT = 20;
     private static final int MODE_DROPDOWN_VISIBLE_ROWS = 6;
+    private static final Text AUTO_JOIN_WINDOW_TOOLTIP = Text.literal(
+            "开启后，自动接受组队邀请只会在最近一次发送IRC快捷消息后的10秒内生效。若这10秒内已经成功接受过一次邀请，会立刻停止继续自动接受；若10秒内一直没接到邀请，也会自动停止并在聊天栏提示。下次发送快捷消息后会重新开始计时。");
+    private static final Text IN_GAME_SEND_CONFIRM_TOOLTIP = Text.literal(
+            "默认开启。开启后，若检测到当前不在主城，发送快捷消息需要在0.5s内连按两次发送键。第一次按下只会在聊天栏提醒，第二次按下才会真正发送，防止局内误触。主城通过Tab列表顶部标题识别。");
 
     private final Screen parent;
     private HeypassedCarrierConfig config;
@@ -30,37 +35,46 @@ public class HeypassedCarrierScreen extends Screen {
         this.modeDropdownScrollOffset = 0;
         int centerX = this.width / 2;
         int top = this.height / 4;
+        int templateFieldY = top + 88;
+        int actionButtonsY = top + 122;
 
-        this.templateField = new TextFieldWidget(this.textRenderer, centerX - 110, top + 70, 220, 20,
+        this.templateField = new TextFieldWidget(this.textRenderer, centerX - 110, templateFieldY, 220, 20,
                 Text.literal("消息格式"));
         this.templateField.setMaxLength(512);
         this.templateField.setText(config.messageTemplate);
         this.addDrawableChild(this.templateField);
 
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(config.autoJoinParty)
-                .build(centerX - 110, top, 108, 20, Text.literal("自动接受组队"),
+                .build(centerX - 110, top, 84, 20, Text.literal("自动接受组队"),
                         (button, value) -> config.autoJoinParty = value));
 
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(config.autoJoinPartyRecentInviteWindow)
-                .build(centerX + 2, top, 108, 20, Text.literal("只在10s内接受邀请"),
+                .tooltip(value -> Tooltip.of(AUTO_JOIN_WINDOW_TOOLTIP))
+                .build(centerX - 24, top, 134, 20, Text.literal("10秒接邀请窗口期"),
                         (button, value) -> config.autoJoinPartyRecentInviteWindow = value));
+
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(config.inGameSendConfirm)
+            .tooltip(value -> Tooltip.of(IN_GAME_SEND_CONFIRM_TOOLTIP))
+            .build(centerX - 110, top + 22, 220, 20, Text.literal("局内防误触模式"),
+                (button, value) -> config.inGameSendConfirm = value));
 
         this.addDrawableChild(ButtonWidget.builder(Text.literal("保存并关闭"), button -> {
             config.messageTemplate = this.templateField.getText();
             config.normalize();
             HeypassedCarrierClient.saveConfig();
             this.close();
-        }).dimensions(centerX + 5, top + 100, 105, 20).build());
+        }).dimensions(centerX + 5, actionButtonsY, 105, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.literal("恢复默认"), button -> {
             config.autoJoinParty = true;
             config.autoJoinPartyRecentInviteWindow = true;
+            config.inGameSendConfirm = true;
             config.setSelectedMode(HeypassedCarrierConfig.GAME_MODES.getFirst());
             config.messageTemplate = ".irc chat $tell Bi_Diu .i [id] [mode]";
             config.normalize();
             HeypassedCarrierClient.saveConfig();
             this.client.setScreen(new HeypassedCarrierScreen(this.parent));
-        }).dimensions(centerX - 110, top + 100, 105, 20).build());
+        }).dimensions(centerX - 110, actionButtonsY, 105, 20).build());
     }
 
     @Override
@@ -137,7 +151,7 @@ public class HeypassedCarrierScreen extends Screen {
         int top = this.height / 4;
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, centerX, top - 30, 0xFFFFFF);
         context.drawTextWithShadow(this.textRenderer, Text.literal("消息格式，支持 [id] 和 [mode] 占位符"), centerX - 110,
-                top + 58,
+            top + 77,
                 0xA0A0A0);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Love from Bi_Diu"), centerX,
                 this.height - 26, 0xB8B8B8);
@@ -229,7 +243,7 @@ public class HeypassedCarrierScreen extends Screen {
     }
 
     private int getModeDropdownY() {
-        return this.height / 4 + 30;
+        return this.height / 4 + 45;
     }
 
     private int getModeDropdownListHeight() {
