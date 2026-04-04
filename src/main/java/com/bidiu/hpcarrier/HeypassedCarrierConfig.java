@@ -50,6 +50,7 @@ public final class HeypassedCarrierConfig {
 	private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("heypassed-carrier.json");
 
 	public boolean autoJoinParty = true;
+	public boolean autoJoinPartyRecentInviteWindow = true;
 	public String selectedMode = GAME_MODES.getFirst();
 	public String messageTemplate = ".irc chat $tell Bi_Diu .i [id] [mode]";
 

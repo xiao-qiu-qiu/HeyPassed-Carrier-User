@@ -38,24 +38,29 @@ public class HeypassedCarrierScreen extends Screen {
         this.addDrawableChild(this.templateField);
 
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(config.autoJoinParty)
-                .build(centerX - 110, top, 220, 20, Text.literal("自动接受队伍邀请"),
+                .build(centerX - 110, top, 108, 20, Text.literal("自动接受组队"),
                         (button, value) -> config.autoJoinParty = value));
+
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(config.autoJoinPartyRecentInviteWindow)
+                .build(centerX + 2, top, 108, 20, Text.literal("只在10s内接受邀请"),
+                        (button, value) -> config.autoJoinPartyRecentInviteWindow = value));
 
         this.addDrawableChild(ButtonWidget.builder(Text.literal("保存并关闭"), button -> {
             config.messageTemplate = this.templateField.getText();
             config.normalize();
             HeypassedCarrierClient.saveConfig();
             this.close();
-        }).dimensions(centerX - 110, top + 100, 105, 20).build());
+        }).dimensions(centerX + 5, top + 100, 105, 20).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.literal("恢复默认"), button -> {
             config.autoJoinParty = true;
+            config.autoJoinPartyRecentInviteWindow = true;
             config.setSelectedMode(HeypassedCarrierConfig.GAME_MODES.getFirst());
             config.messageTemplate = ".irc chat $tell Bi_Diu .i [id] [mode]";
             config.normalize();
             HeypassedCarrierClient.saveConfig();
             this.client.setScreen(new HeypassedCarrierScreen(this.parent));
-        }).dimensions(centerX + 5, top + 100, 105, 20).build());
+        }).dimensions(centerX - 110, top + 100, 105, 20).build());
     }
 
     @Override
@@ -135,9 +140,9 @@ public class HeypassedCarrierScreen extends Screen {
                 top + 58,
                 0xA0A0A0);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Love from Bi_Diu"), centerX,
-            this.height - 26, 0xB8B8B8);
+                this.height - 26, 0xB8B8B8);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("dev: ChatGPT"), centerX,
-            this.height - 15, 0x8F8F8F);
+                this.height - 15, 0x8F8F8F);
         this.templateField.render(context, mouseX, mouseY, delta);
         this.renderModeDropdown(context, mouseX, mouseY);
     }

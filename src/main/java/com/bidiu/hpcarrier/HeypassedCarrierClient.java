@@ -20,6 +20,7 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 	private static HeypassedCarrierConfig config;
 	private static KeyBinding sendInviteKey;
 	private static KeyBinding openScreenKey;
+	private static long lastInviteShortcutAtMillis;
 
 	@Override
 	public void onInitializeClient() {
@@ -47,6 +48,7 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 			String playerId = resolvePlayerId(client);
 			if (playerId != null) {
 				client.getNetworkHandler().sendChatMessage(config.buildInviteMessage(playerId));
+				lastInviteShortcutAtMillis = System.currentTimeMillis();
 			}
 		}
 
@@ -58,6 +60,13 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 	private static void tryAutoJoin(Text message) {
 		if (!config.autoJoinParty || !message.getString().contains(INVITE_HINT)) {
 			return;
+		}
+
+		if (config.autoJoinPartyRecentInviteWindow) {
+			long elapsedMillis = System.currentTimeMillis() - lastInviteShortcutAtMillis;
+			if (elapsedMillis < 0 || elapsedMillis > 10_000L) {
+				return;
+			}
 		}
 
 		String command = findRunCommand(message);
