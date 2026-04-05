@@ -5,7 +5,6 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.hud.PlayerListHud;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.MutableText;
@@ -16,11 +15,8 @@ import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.lang.reflect.Field;
-
 public class HeypassedCarrierClient implements ClientModInitializer {
 	public static final String KEY_CATEGORY = "key.categories.heypassed-carrier";
-	private static final String HUB_TAB_HEADER_KEYWORD = "欢迎你的到来";
 	private static final String INVITE_HINT = "邀请您加入他的队伍";
 	private static final long AUTO_JOIN_WINDOW_MILLIS = 10_000L;
 	private static final long SEND_CONFIRM_WINDOW_MILLIS = 500L;
@@ -192,32 +188,25 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 	}
 
 	private static boolean isInHub(MinecraftClient client) {
-		if (client.getNetworkHandler() == null || client.player == null) {
+		if (client.player == null) {
 			return false;
 		}
 
-		Text tabListHeader = getTabListHeader(client.inGameHud.getPlayerListHud());
-		if (tabListHeader == null) {
+		// 检查快捷栏最后一格(第8格,索引为8)是否是名为"选择大厅 (点击使用)"的下界之星
+		net.minecraft.item.ItemStack lastHotbarItem = client.player.getInventory().getStack(8);
+		if (lastHotbarItem.isEmpty()) {
 			return false;
 		}
 
-		// 使用contains检查关键字,而不是完全匹配,避免格式化代码差异导致的问题
-		String headerString = tabListHeader.getString();
-		return headerString != null && headerString.contains(HUB_TAB_HEADER_KEYWORD);
-	}
-
-	private static @Nullable Text getTabListHeader(PlayerListHud playerListHud) {
-		try {
-			Field headerField = PlayerListHud.class.getDeclaredField("header");
-			headerField.setAccessible(true);
-			Object value = headerField.get(playerListHud);
-			if (value instanceof Text text) {
-				return text;
-			}
-		} catch (ReflectiveOperationException ignored) {
+		// 检查是否是下界之星
+		if (!lastHotbarItem.isOf(net.minecraft.item.Items.NETHER_STAR)) {
+			return false;
 		}
 
-		return null;
+		// 检查物品名称是否为"选择大厅 (点击使用)"
+		Text itemName = lastHotbarItem.getName();
+		String nameString = itemName.getString();
+		return "选择大厅 (点击使用)".equals(nameString);
 	}
 
 	private static @Nullable String resolvePlayerId(MinecraftClient client) {
