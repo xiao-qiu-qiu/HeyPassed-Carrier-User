@@ -54,9 +54,9 @@ public class HeypassedCarrierScreen extends Screen {
                         (button, value) -> config.autoJoinPartyRecentInviteWindow = value));
 
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(config.inGameSendConfirm)
-            .tooltip(value -> Tooltip.of(IN_GAME_SEND_CONFIRM_TOOLTIP))
-            .build(centerX - 110, top + 22, 220, 20, Text.literal("局内防误触模式"),
-                (button, value) -> config.inGameSendConfirm = value));
+                .tooltip(value -> Tooltip.of(IN_GAME_SEND_CONFIRM_TOOLTIP))
+                .build(centerX - 110, top + 22, 220, 20, Text.literal("局内防误触模式"),
+                        (button, value) -> config.inGameSendConfirm = value));
 
         this.addDrawableChild(ButtonWidget.builder(Text.literal("保存并关闭"), button -> {
             config.messageTemplate = this.templateField.getText();
@@ -151,7 +151,7 @@ public class HeypassedCarrierScreen extends Screen {
         int top = this.height / 4;
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, centerX, top - 30, 0xFFFFFF);
         context.drawTextWithShadow(this.textRenderer, Text.literal("消息格式，支持 [id] 和 [mode] 占位符"), centerX - 110,
-            top + 77,
+                top + 77,
                 0xA0A0A0);
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Love from Bi_Diu"), centerX,
                 this.height - 26, 0xB8B8B8);

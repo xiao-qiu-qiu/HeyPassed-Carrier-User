@@ -20,7 +20,7 @@ import java.lang.reflect.Field;
 
 public class HeypassedCarrierClient implements ClientModInitializer {
 	public static final String KEY_CATEGORY = "key.categories.heypassed-carrier";
-	private static final String HUB_TAB_HEADER = "§d§o§d§l布吉岛\n§r§7欢迎你的到来~";
+	private static final String HUB_TAB_HEADER_KEYWORD = "欢迎你的到来";
 	private static final String INVITE_HINT = "邀请您加入他的队伍";
 	private static final long AUTO_JOIN_WINDOW_MILLIS = 10_000L;
 	private static final long SEND_CONFIRM_WINDOW_MILLIS = 500L;
@@ -31,8 +31,10 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 	private static KeyBinding sendInviteKey;
 	private static KeyBinding openScreenKey;
 	private static long lastInviteShortcutAtMillis;
+	private static long autoJoinWindowStartAtMillis;
 	private static long firstSendConfirmAtMillis;
 	private static boolean autoJoinWindowActive;
+	private static boolean autoJoinWindowHasReceivedInvite;
 	private static boolean waitingForSecondSendPress;
 
 	@Override
@@ -52,6 +54,8 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(this::handleKeyPresses);
 		ClientReceiveMessageEvents.GAME.register((message, overlay) -> tryAutoJoin(message));
+		ClientReceiveMessageEvents.CHAT
+				.register((message, signedMessage, sender, params, receptionTimestamp) -> tryAutoJoin(message));
 	}
 
 	private void handleKeyPresses(MinecraftClient client) {
@@ -79,11 +83,19 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 				return;
 			}
 
-			long elapsedMillis = System.currentTimeMillis() - lastInviteShortcutAtMillis;
+			long elapsedMillis = System.currentTimeMillis() - autoJoinWindowStartAtMillis;
 			if (elapsedMillis < 0 || elapsedMillis > AUTO_JOIN_WINDOW_MILLIS) {
 				autoJoinWindowActive = false;
+				// 超时后收到邀请，发送提示消息
+				MinecraftClient client = MinecraftClient.getInstance();
+				if (client.player != null) {
+					client.player.sendMessage(AUTO_JOIN_TIMEOUT_TEXT, false);
+				}
+				autoJoinWindowHasReceivedInvite = false;
 				return;
 			}
+
+			autoJoinWindowHasReceivedInvite = true;
 		}
 
 		String command = findRunCommand(message);
@@ -104,6 +116,7 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 
 		if (config.autoJoinPartyRecentInviteWindow) {
 			autoJoinWindowActive = false;
+			autoJoinWindowHasReceivedInvite = false;
 		}
 	}
 
@@ -112,15 +125,17 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 			return;
 		}
 
-		long elapsedMillis = System.currentTimeMillis() - lastInviteShortcutAtMillis;
+		long elapsedMillis = System.currentTimeMillis() - autoJoinWindowStartAtMillis;
 		if (elapsedMillis < 0 || elapsedMillis <= AUTO_JOIN_WINDOW_MILLIS) {
 			return;
 		}
 
 		autoJoinWindowActive = false;
-		if (client.player != null) {
+		// 10秒内未收到邀请，发送超时提示
+		if (!autoJoinWindowHasReceivedInvite && client.player != null) {
 			client.player.sendMessage(AUTO_JOIN_TIMEOUT_TEXT, false);
 		}
+		autoJoinWindowHasReceivedInvite = false;
 	}
 
 	private static Text buildAutoJoinTimeoutText() {
@@ -169,7 +184,11 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 	private static void sendInviteMessage(MinecraftClient client, String playerId) {
 		client.getNetworkHandler().sendChatMessage(config.buildInviteMessage(playerId));
 		lastInviteShortcutAtMillis = System.currentTimeMillis();
-		autoJoinWindowActive = true;
+		if (config.autoJoinPartyRecentInviteWindow) {
+			autoJoinWindowActive = true;
+			autoJoinWindowStartAtMillis = System.currentTimeMillis();
+			autoJoinWindowHasReceivedInvite = false;
+		}
 	}
 
 	private static boolean isInHub(MinecraftClient client) {
@@ -182,7 +201,9 @@ public class HeypassedCarrierClient implements ClientModInitializer {
 			return false;
 		}
 
-		return HUB_TAB_HEADER.equals(tabListHeader.getString());
+		// 使用contains检查关键字,而不是完全匹配,避免格式化代码差异导致的问题
+		String headerString = tabListHeader.getString();
+		return headerString != null && headerString.contains(HUB_TAB_HEADER_KEYWORD);
 	}
 
 	private static @Nullable Text getTabListHeader(PlayerListHud playerListHud) {
